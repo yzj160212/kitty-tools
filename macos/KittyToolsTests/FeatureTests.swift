@@ -51,9 +51,10 @@ struct FeatureTests {
     let full = HotKeyAction.visibleSections(enabled: all)
     #expect(Set(full.flatMap(\.actions)) == Set(HotKeyAction.allCases))
     #expect(full.first?.title == "剪贴板与启动器")
-    // 功能全关时只剩不归功能的那一节（刘海岛 2026-11-13 起是插件）
-    #expect(HotKeyAction.visibleSections(enabled: []).map(\.title) == ["主界面"])
-    #expect(HotKeyAction.visibleSections(enabled: [.island]).map(\.title) == ["刘海岛", "主界面"])
+    // 功能全关时只剩不归功能的那一节（刘海岛 2026-11-13 起是插件）；本 fork 另有「系统」一节
+    #expect(HotKeyAction.visibleSections(enabled: []).map(\.title) == ["主界面", "系统"])
+    #expect(
+      HotKeyAction.visibleSections(enabled: [.island]).map(\.title) == ["刘海岛", "主界面", "系统"])
 
     let noClipboard = HotKeyAction.visibleSections(enabled: all.subtracting([.clipboard]))
     #expect(noClipboard.first?.title == "启动器")
@@ -149,7 +150,7 @@ struct FeatureTests {
 
     // 都关掉只剩不归功能的那几组；刘海岛那一组一直列，没添加插件时只剩「提示怎么停住、收起」那一行（评审 5）
     let none = ShortcutsSheet.groups(enabled: [])
-    #expect(none.map(\.title) == ["刘海岛", "主界面", "设置"])
+    #expect(none.map(\.title) == ["刘海岛", "主界面", "系统", "设置"])
     #expect(none[0].globals.isEmpty && none[0].entries.count == 1)
   }
 
