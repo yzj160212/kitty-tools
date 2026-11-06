@@ -63,18 +63,18 @@ struct ProviderSigningTests {
     #expect(body == "q=a%26b%3Dc%2Bd%20%E4%B8%AD")
   }
 
-  /// 服务列表只放加进来的（体检 B21）：从没存过时只有智谱（启用）；存过的原样用、删掉的内置服务不补回来，
-  /// 「+」里列出没加的内置服务；删内置服务不碰钥匙串（加回来密钥还在）
+  /// 服务列表只放加进来的（体检 B21）：从没存过时一个服务都没有（本 fork 不预置智谱 GLM，也不在「+」里列它）；
+  /// 存过的原样用、删掉的内置服务不补回来，「+」里列出没加的内置服务；删内置服务不碰钥匙串（加回来密钥还在）
   @Test func storeKeepsOnlyAddedServices() {
-    #expect(TranslateServiceStore.defaults.map(\.id) == ["zhipu"])
-    #expect(TranslateServiceStore.defaults.map(\.isEnabled) == [true])
+    #expect(TranslateServiceStore.defaults.isEmpty)
     let ai = TranslateService.newAI()
     let store = TranslateServiceStore(services: [.builtin(.baidu), ai])
-    #expect(store.services.map(\.id) == ["baidu", ai.id])  // 不再自动补齐 8 个内置
-    // 9 个没加的内置（系统翻译只在 macOS 26 起列出来，2026-11-05）
+    #expect(store.services.map(\.id) == ["baidu", ai.id])  // 不自动补齐内置
+    // 8 个没加的内置（智谱 GLM 不在「+」里；系统翻译只在 macOS 26 起列出来，2026-11-05）
     #expect(
-      store.missingBuiltins.count == (AppleTranslation.isAvailable ? 9 : 8)
+      store.missingBuiltins.count == (AppleTranslation.isAvailable ? 8 : 7)
         && !store.missingBuiltins.contains(.baidu))
+    #expect(!store.missingBuiltins.contains(.zhipu))
     #expect(!store.missingBuiltins.contains(.ai))
     // 传进来的列表怎么改都不写用户的偏好（详情页的输入框会把绑定写一遍，曾经这样盖掉过 Dev 版的真实列表）
     let saved = UserDefaults.standard.data(forKey: "translateServices")

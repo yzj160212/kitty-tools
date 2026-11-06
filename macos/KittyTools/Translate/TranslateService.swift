@@ -184,7 +184,7 @@ nonisolated struct TranslateService: Codable, Identifiable, Hashable, Sendable {
   }
 }
 
-/// 服务列表（设置页编辑，翻译时读）。从没存过时只有智谱（启用）；存过的原样用，删掉的内置服务不再补回来（体检 B21）
+/// 服务列表（设置页编辑，翻译时读）。从没存过时一个服务都没有（本 fork 不预置智谱 GLM）；存过的原样用，删掉的内置服务不再补回来（体检 B21）
 @Observable final class TranslateServiceStore {
   nonisolated static let key = "translateServices"
 
@@ -212,13 +212,13 @@ nonisolated struct TranslateService: Codable, Identifiable, Hashable, Sendable {
     self.services = saved ?? Self.defaults
   }
 
-  /// 从没存过列表时的默认：只有内置智谱（启用），别的在设置「+」里加
-  static let defaults = [TranslateService.zhipu]
+  /// 从没存过列表时的默认：一个服务都没有（本 fork 不要智谱 GLM 的「免费额度」，翻译自己加：自建 AI / Ollama 等）
+  static let defaults: [TranslateService] = []
 
-  /// 还没加进列表的内置服务（设置「+」菜单里列出来）
+  /// 还没加进列表的内置服务（设置「+」菜单里列出来）。智谱 GLM 不列（本 fork 不用它的内置免费额度）
   var missingBuiltins: [TranslateService.Kind] {
     TranslateService.Kind.allCases.filter { kind in
-      kind != .ai && !services.contains { $0.id == kind.rawValue }
+      kind != .ai && kind != .zhipu && !services.contains { $0.id == kind.rawValue }
         && (kind != .apple || AppleTranslation.isAvailable)
     }
   }
