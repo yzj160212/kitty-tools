@@ -169,7 +169,7 @@ enum HotKeyAction: String, CaseIterable {
   case clipboard, selectionTranslate, inputTranslate, screenshotTranslate, launcher, screenshot,
     screenshotLastRegion, recognizeText, translateReplace, screenRecord, audioRecord, pinClipboard,
     statusScreen, noteCapture, noteNew, noteAll, launchpad, shotHistory, island, clothesline, home,
-    reminderNew
+    reminderNew, displayOff
 
   var title: String {
     switch self {
@@ -195,6 +195,7 @@ enum HotKeyAction: String, CaseIterable {
     case .island: "打开刘海岛"
     case .home: "打开主界面"
     case .reminderNew: "新建提醒"
+    case .displayOff: "关闭显示器"
     }
   }
 
@@ -268,6 +269,10 @@ enum HotKeyAction: String, CaseIterable {
     case .island: nil
     // 主界面（2026-10-29）：主入口是点菜单栏图标，键给把图标藏起来的人自己设
     case .home: nil
+    // 关闭显示器（2026-11-06，用户要求）：只关屏、不让机器睡（pmset displaysleepnow，和启动器的「关闭显示器」同一条路）。
+    // 给一个不常被占的四键组合，不想用的到快捷键页里清除或换掉
+    case .displayOff: HotKey(
+      keyCode: kVK_ANSI_P, modifiers: controlKey | optionKey | cmdKey)
     }
   }
 
@@ -330,7 +335,7 @@ enum HotKeyAction: String, CaseIterable {
     case .launchpad: .launchpad
     case .statusScreen: .statusScreen
     case .reminderNew: .reminders
-    case .island, .home: nil
+    case .island, .home, .displayOff: nil
     }
   }
 
@@ -366,6 +371,8 @@ enum HotKeyAction: String, CaseIterable {
     ("刘海岛", [.island]),
     // 主界面（2026-10-29）：同刘海岛，一直在；菜单栏菜单里不列（菜单就是图标的另一半），主界面里也不列它自己
     ("主界面", [.home]),
+    // 关闭显示器（2026-11-06）：不属于哪个功能，一直在（关不掉的功能开关管不着它）
+    ("系统", [.displayOff]),
   ]
 
   /// 刘海岛那一张上的快捷动作（2026-10-26）：截图家族在前（同截图工具栏的顺序），再录制、快速记一条
@@ -403,6 +410,8 @@ enum HotKeyAction: String, CaseIterable {
     // 从菜单栏垂下来的那一块
     case .home: "kitty.home"
     case .reminderNew: SettingsPage.reminders.symbol
+    // 关屏用 SF 的「睡着」符号（没有自己画的 kitty.* 图）
+    case .displayOff: "moon.zzz"
     }
   }
 
@@ -420,7 +429,7 @@ enum HotKeyAction: String, CaseIterable {
     case .noteCapture, .noteNew, .noteAll: Style.Family.notes
     case .launchpad: Style.Family.launchpad
     case .reminderNew: Style.Family.reminders
-    case .island, .home: Style.Family.general
+    case .island, .home, .displayOff: Style.Family.general
     }
   }
 }

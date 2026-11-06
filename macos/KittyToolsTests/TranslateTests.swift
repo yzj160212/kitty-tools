@@ -292,12 +292,15 @@ struct HistoryStoreTests {
     // 便签的三个（2026-10-12，只有快速记一条有默认键）接在后面，启动台（2026-10-18，不设默认键）再接在后面，
     // 截图历史（2026-10-26，不设默认键）接在后面——它在菜单和启动器里排在钉图后面，但枚举里只能往末尾加——
     // 打开刘海岛（2026-10-26，不设默认键）再接在后面，晾衣绳（第十族，2026-10-26，不设默认键）接在后面，
-    // 打开主界面（2026-10-29，不设默认键）接在后面，新建提醒（2026-11-04，不设默认键）接在最后
+    // 打开主界面（2026-10-29，不设默认键）接在后面，新建提醒（2026-11-04，不设默认键）接在后面，
+    // 关闭显示器（2026-11-06，本 fork 加，默认 ⌃⌥⌘P）接在最后
     #expect(
-      Array(HotKeyAction.allCases.suffix(14)) == [
+      Array(HotKeyAction.allCases.suffix(15)) == [
         .translateReplace, .screenRecord, .audioRecord, .pinClipboard, .statusScreen, .noteCapture,
         .noteNew, .noteAll, .launchpad, .shotHistory, .island, .clothesline, .home, .reminderNew,
+        .displayOff,
       ])
+    #expect(HotKeyAction.displayOff.title == "关闭显示器")
     #expect(HotKeyAction.reminderNew.defaultHotKey == nil)
     #expect(HotKeyAction.home.defaultHotKey == nil)
     #expect(HotKeyAction.audioRecord.defaultHotKey == nil)

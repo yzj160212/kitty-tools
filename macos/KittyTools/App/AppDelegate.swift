@@ -1689,6 +1689,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
       island.toggleBoard(byKeyboard: byKey || NSApp.currentEvent?.type == .keyDown)
     case .home: toggleHome()
     case .reminderNew: newReminder()
+    // 关闭显示器（2026-11-06）：只关屏、不让机器睡，和启动器的「关闭显示器」同一条 pmset 命令
+    case .displayOff: SystemControl.perform(.command(.sleepdisplays), island: island)
     }
   }
 

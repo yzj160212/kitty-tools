@@ -699,6 +699,13 @@ struct ShortcutsSheet: View {
           Entry("⌘Q", text: "退出 Kitty Tools"),
           Entry("Esc", "⌘W", text: "收起"),
         ]),
+      // 关闭显示器（2026-11-06）：不属于哪个功能，一直列；只有全局快捷键这一个入口
+      Group(
+        title: "系统", symbol: HotKeyAction.displayOff.symbol, color: Style.Family.general,
+        globals: [.displayOff],
+        entries: [
+          Entry(text: "只关屏、不让机器睡（pmset displaysleepnow）：按任意键、点鼠标或触控板就亮回来，不用重新登录"),
+        ]),
       // mac-whisker §6 设置；代码在 SettingsWindow 的 SettingsCommands（主菜单「显示 › 返回」）
       Group(
         title: "设置", symbol: SettingsPage.general.symbol, color: Style.Family.general,

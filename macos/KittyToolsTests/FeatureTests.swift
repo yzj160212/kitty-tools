@@ -52,7 +52,8 @@ struct FeatureTests {
     #expect(Set(full.flatMap(\.actions)) == Set(HotKeyAction.allCases))
     #expect(full.first?.title == "剪贴板与启动器")
     // 功能全关时只剩不归功能的那一节
-    #expect(HotKeyAction.visibleSections(enabled: []).map(\.title) == ["刘海岛", "主界面"])
+    #expect(
+      HotKeyAction.visibleSections(enabled: []).map(\.title) == ["刘海岛", "主界面", "系统"])
 
     let noClipboard = HotKeyAction.visibleSections(enabled: all.subtracting([.clipboard]))
     #expect(noClipboard.first?.title == "启动器")
@@ -146,8 +147,10 @@ struct FeatureTests {
     #expect(
       noRecord.first { $0.title == "截图 · 出图" }?.entries.contains { $0.keys == ["R"] } == false)
 
-    // 都关掉只剩不归功能的「设置」一组
-    #expect(ShortcutsSheet.groups(enabled: []).map(\.title) == ["刘海岛", "主界面", "设置"])
+    // 都关掉只剩不归功能的「刘海岛」「主界面」「系统」和「设置」
+    #expect(
+      ShortcutsSheet.groups(enabled: []).map(\.title)
+        == ["刘海岛", "主界面", "系统", "设置"])
   }
 
   /// 新装（没看过任何一版）第一次启动把开关明写进偏好：常用的四个开、别的关（功能管理拍板 M4 M5）；已经存过的不动
