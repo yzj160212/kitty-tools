@@ -27,9 +27,11 @@ BUILD="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$APP/Contents/Info
 BUNDLEID="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Contents/Info.plist" 2>/dev/null || echo '?')"
 info "版本 $VERSION（$BUILD） · $BUNDLEID"
 codesign --verify --strict "$APP" >/dev/null 2>&1 && ok '签名自洽（codesign --verify --strict）' || bad '签名校验不通过'
-if codesign -dvv "$APP" 2>&1 | grep -q 'TeamIdentifier=not set'; then
-  info 'ad-hoc 签名（App 内更新用不了，属预期）'
-fi
+# 先存变量再判断：pipefail 下 grep -q 提前退出会让 codesign 吃到 SIGPIPE，整个管道报错（build-dmg.sh 里踩过同一个坑）
+SIGNATURE="$(codesign -dvv "$APP" 2>&1 || true)"
+case "$SIGNATURE" in
+  *"TeamIdentifier=not set"*) info 'ad-hoc 签名（App 内更新用不了，属预期）' ;;
+esac
 
 echo
 echo '== 本地改动一：不预置智谱 GLM 的免费翻译服务 =='
@@ -96,11 +98,10 @@ if LC_ALL=C grep -aq '本地构建版（自签名）不支持 App 内更新' "$B
 else
   bad '二进制里找不到那段文案：守卫可能没生效'
 fi
-if codesign -dvv "$APP" 2>&1 | grep -q 'TeamIdentifier=not set'; then
-  ok '这份产物是 ad-hoc 签名（与守卫一致）'
-else
-  bad '这份产物不是 ad-hoc（装了官方包？）：本地定制可能已经不在了'
-fi
+case "$SIGNATURE" in
+  *"TeamIdentifier=not set"*) ok '这份产物是 ad-hoc 签名（与守卫一致）' ;;
+  *) bad '这份产物不是 ad-hoc（装了官方包？）：本地定制可能已经不在了' ;;
+esac
 
 echo
 echo '== 运行时数据（只是提示）=='
