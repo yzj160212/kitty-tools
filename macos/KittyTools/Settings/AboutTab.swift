@@ -74,7 +74,16 @@ struct AboutTab: View {
             .padding(.vertical, 4)
             .background(Style.brand.opacity(0.12), in: .capsule)
             .textSelection(.enabled)
-          if let updater { updateRow(updater) }
+          if let updater {
+            // 本地自签构建：不说「检查更新」（下了也装不上，装了还会把本地定制覆盖掉）
+            if Updater.isAdHocSigned {
+              Text("本地构建版（自签名）不支持 App 内更新，升级请重新构建后替换")
+                .font(.callout).foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+            } else {
+              updateRow(updater)
+            }
+          }
           HStack(spacing: 16) {
             Button("打开发布页") { NSWorkspace.shared.open(Updater.releasesPage) }
             Button("重看欢迎引导", action: showOnboarding)

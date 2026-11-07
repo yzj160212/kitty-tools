@@ -12,8 +12,11 @@
 // 下了一半的临时文件由系统的下载任务删掉）；之后解包、验签、替换只有一两秒，写「正在安装」、不能取消。不用 Sparkle（禁止第三方依赖）；解包、验签交给系统的 ditto / codesign，在进程外跑。
 // App 自己用 URLSession 下载的文件不带隔离标记（实测），换上的新版不会再被 Gatekeeper 拦；证书不变，授权不丢。
 // 只有正式版（bundle id com.yy.kitty-tools.native）更新：Debug 版的 bundle id 不同，装过去会把 Dev 换成正式版。
+// 本地自签（ad-hoc）的构建不更新（本 fork，2026-11-07）：官方包带作者团队证书、能通过下面的 requirement 验签，
+// 换上来会把本地定制（智谱不预置、关闭显示器快捷键）整套覆盖掉——2026-11-07 实际就这么丢过一次。
 
 import AppKit
+import Security
 
 @Observable final class Updater {
   struct Release: Equatable, Sendable {
@@ -90,8 +93,32 @@ import AppKit
     available = Self.available(nil, after: state)
   }
 
-  /// 正式版才更新（Debug 版 bundle id 不同）
-  var isSupported: Bool { Bundle.main.bundleIdentifier == Self.bundleID }
+  /// 正式版才更新（Debug 版 bundle id 不同），而且本地自签的构建一律不更新
+  var isSupported: Bool { Bundle.main.bundleIdentifier == Self.bundleID && !Self.isAdHocSigned }
+
+  /// 这份构建是不是 ad-hoc 签名（`codesign --sign -`，本机自己编的）：读自己的签名信息，看 Flag 里的 adhoc 位。
+  /// 读不到签名信息（没签名、接口变了）一律当「不是 ad-hoc」：那种情况宁可保留原来的更新能力，也不默默关掉
+  static let isAdHocSigned: Bool = {
+    var code: SecCode?
+    guard SecCodeCopySelf([], &code) == errSecSuccess, let code else { return false }
+    var staticCode: SecStaticCode?
+    guard SecCodeCopyStaticCode(code, [], &staticCode) == errSecSuccess, let staticCode else {
+      return false
+    }
+    var information: CFDictionary?
+    guard
+      SecCodeCopySigningInformation(
+        staticCode, SecCSFlags(rawValue: kSecCSSigningInformation), &information) == errSecSuccess,
+      let values = information as? [String: Any],
+      let flags = values[kSecCodeInfoFlags as String] as? UInt32
+    else { return false }
+    return flags & 0x2 != 0  // kSecCodeSignatureAdhoc
+  }()
+
+  /// 不能更新时的那句话（关于页、刘海都显示它）
+  static var unsupportedReason: String {
+    isAdHocSigned ? "本地构建版（自签名）不支持 App 内更新，请重新构建后替换" : "开发版不自动更新"
+  }
 
   /// 启动后 10 s 查一次，之后每天一次；没查成（多半是刚开机网络还没好）半小时后再试。设置里关了就跳过
   func start() {
@@ -125,7 +152,7 @@ import AppKit
     default: break
     }
     guard isSupported else {
-      state = .failed("开发版不自动更新")
+      state = .failed(Self.unsupportedReason)
       return true
     }
     let previous = state
