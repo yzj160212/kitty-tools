@@ -84,6 +84,25 @@ else
 fi
 
 echo
+echo '== 本地改动三：自签构建不自动更新（否则官方包会盖掉定制）=='
+if grep -q 'isAdHocSigned' macos/KittyTools/App/Updater.swift 2>/dev/null \
+  && grep -q 'isSupported: Bool { Bundle.main.bundleIdentifier == Self.bundleID && !Self.isAdHocSigned }' macos/KittyTools/App/Updater.swift 2>/dev/null; then
+  ok 'Updater 里有 ad-hoc 识别，且 isSupported 依赖它'
+else
+  bad 'Updater 的 ad-hoc 守卫不见了（上游改了 Updater.swift？）：现在官方包会被当成合法更新装上来'
+fi
+if LC_ALL=C grep -aq '本地构建版（自签名）不支持 App 内更新' "$BIN"; then
+  ok '二进制里有「本地构建版不支持 App 内更新」的文案（守卫真编进去了）'
+else
+  bad '二进制里找不到那段文案：守卫可能没生效'
+fi
+if codesign -dvv "$APP" 2>&1 | grep -q 'TeamIdentifier=not set'; then
+  ok '这份产物是 ad-hoc 签名（与守卫一致）'
+else
+  bad '这份产物不是 ad-hoc（装了官方包？）：本地定制可能已经不在了'
+fi
+
+echo
 echo '== 运行时数据（只是提示）=='
 STORED="$(defaults read "$BUNDLEID" translateServices 2>/dev/null || true)"
 if printf '%s' "$STORED" | grep -qi zhipu; then

@@ -43,6 +43,10 @@ ditto build/Build/Products/Release/"Kitty Tools.app" "/Applications/Kitty Tools.
 
 翻译自己配，本机 Ollama：设置 › 翻译 ›「+」› AI 服务 › Ollama，地址 `http://127.0.0.1:11434/v1`，填模型名（`ollama list` 里的），打开「启用」，本机地址不要 API Key。
 
+**3. 自签构建不自动更新**
+`Updater.isSupported` 加上 `&& !Self.isAdHocSigned`（`SecCodeCopySigningInformation` 读 `kSecCodeInfoFlags` 的 adhoc 位）；关于页对自签构建不再显示「检查更新」，改写一句说明。
+**为什么必须留着**：官方包带作者团队证书 `HTX9F4KG39`，能通过 `Updater.requirement` 验签，一更新就会把上面两条定制整套覆盖——2026-11-07 真发生过一次（装的变成官方 0.7.3，内置 key 也回来了）。
+
 **2. 「关闭显示器」全局快捷键**
 `HotKeyAction.displayOff`（枚举末尾），默认 ⌃⌥⌘P，执行 `pmset displaysleepnow`：只关屏、机器不睡，任意键或点触控板就亮回来，和启动器的「关闭显示器」系统命令同一条路，不需要新权限。设置 › 快捷键 › 系统 里可改键或清除。
 
