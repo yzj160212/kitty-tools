@@ -91,9 +91,13 @@ tools/local/verify.sh build/Build/Products/Release/"Kitty Tools.app"
 
 ## 7. 安装 + 冒烟
 
+**先删旧包再拷**，别直接 `ditto` 覆盖：`ditto` 是合并，新版本删掉的文件（0.9.0 删了 `Resources/roadmap.json`）会留在包里，`codesign --verify --deep --strict` 报 `a sealed resource is missing or invalid`（`file added: …`）。
+
 ```bash
+osascript -e 'tell application id "com.yy.kitty-tools.native" to quit'; sleep 3
+/usr/bin/trash /Applications/"Kitty Tools.app"         # 必须先空掉目标路径
 ditto build/Build/Products/Release/"Kitty Tools.app" /Applications/"Kitty Tools.app"
-codesign --verify --deep --strict /Applications/"Kitty Tools.app"   # deep：连访达扩展一起验
+codesign --verify --deep --strict /Applications/"Kitty Tools.app"   # deep：连访达扩展与 XPC 服务一起验
 open -a /Applications/"Kitty Tools.app"
 tools/local/verify.sh                                               # 对装好的那份再跑一遍
 log show --last 2m --predicate 'subsystem BEGINSWITH "com.yy.kitty-tools"' | grep -i error
@@ -102,7 +106,7 @@ log show --last 2m --predicate 'subsystem BEGINSWITH "com.yy.kitty-tools"' | gre
 ## 8. 收尾
 
 ```bash
-printf '%s\n' "$(git rev-parse macos-v0.8.1)" > macos/tools/local/AUDITED
+printf '%s\n' "$(git rev-parse macos-v0.9.0)" > macos/tools/local/AUDITED
 git add -A && git commit -m "local: 审计锚点更新到 <版本>"
 git push --force-with-lease origin local
 rm -f ~/Projects/fork-patches/*.patch
